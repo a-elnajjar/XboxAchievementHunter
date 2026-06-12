@@ -1,0 +1,11 @@
+{
+    "profiles": {
+      "XboxAchievementHunter": {
+        "commandName": "Project",
+        "environmentVariables": {
+          "XBL_API_KEY": "",
+          "XBL_DEFAULT_GAMERTAG": ""
+        }
+      }
+    }
+  }

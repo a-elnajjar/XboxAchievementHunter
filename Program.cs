@@ -4,19 +4,24 @@ using Microsoft.Extensions.Logging;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// CRITICAL for stdio transport: stdout is the MCP protocol channel.
-// All logging MUST go to stderr or you'll corrupt the JSON-RPC stream.
+// stdio uses stdout for the protocol — keep all logging on stderr.
 builder.Logging.AddConsole(o =>
 {
     o.LogToStandardErrorThreshold = LogLevel.Trace;
 });
 
-// Typed HttpClient for the OpenXBL gateway.
 builder.Services.AddHttpClient<OpenXblClient>();
+
+// Remembers the current player across tool calls so you don't pass the XUID every time.
+// Set XBL_DEFAULT_GAMERTAG in the config env block to default to your own tag.
+builder.Services.AddSingleton(_ => new PlayerContext
+{
+    Gamertag = Environment.GetEnvironmentVariable("XBL_DEFAULT_GAMERTAG")
+});
 
 builder.Services
     .AddMcpServer()
-    .WithStdioServerTransport()       // local. swap for ASP.NET Core + Streamable HTTP to go remote.
-    .WithToolsFromAssembly();         // discovers every [McpServerTool] in this assembly.
+    .WithStdioServerTransport()
+    .WithToolsFromAssembly();
 
 await builder.Build().RunAsync();

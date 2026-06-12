@@ -1,15 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-/// <summary>
-/// Thin wrapper around the OpenXBL (xbl.io) REST gateway.
-///
-/// Auth: every request needs the header  X-Authorization: {your api key}
-/// Get a key + see exact endpoint paths at https://xbl.io/  (free tier: 150 req/hour).
-///
-/// NOTE: the endpoint paths below match OpenXBL's documented shape, but verify them
-/// against the live docs — unofficial APIs move things around occasionally.
-/// </summary>
+// The part that talks to the OpenXBL API. One method per endpoint we use.
 public sealed class OpenXblClient
 {
     private readonly HttpClient _http;
@@ -27,21 +19,32 @@ public sealed class OpenXblClient
         _http.DefaultRequestHeaders.Add("Accept", "application/json");
     }
 
-    /// <summary>Resolve a gamertag to a profile (incl. XUID + gamerscore).</summary>
+    /// <summary>Resolve a gamertag to a full profile (incl. XUID + gamerscore).</summary>
     public async Task<JsonElement> SearchGamertagAsync(string gamertag, CancellationToken ct = default)
-        => await GetJsonAsync($"search/{Uri.EscapeDataString(gamertag)}", ct);
-
-    /// <summary>All achievements for one title for the given player (by XUID).</summary>
-    public async Task<JsonElement> GetTitleAchievementsAsync(string xuid, string titleId, CancellationToken ct = default)
-        => await GetJsonAsync($"achievements/player/{xuid}/{titleId}", ct);
-
-    /// <summary>Recently played titles for a player — useful for "what should I hunt next".</summary>
-    public async Task<JsonElement> GetPlayerTitlesAsync(string xuid, CancellationToken ct = default)
-        => await GetJsonAsync($"achievements/player/{xuid}", ct);
-
-    private async Task<JsonElement> GetJsonAsync(string path, CancellationToken ct)
     {
-        using var resp = await _http.GetAsync(path, ct);
+        using var resp = await _http.GetAsync($"search/{Uri.EscapeDataString(gamertag)}", ct);
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+    }
+
+    /// <summary>Resolve a gamertag straight to its XUID (first match), or null if not found.</summary>
+    public async Task<string?> GetXuidAsync(string gamertag, CancellationToken ct = default)
+    {
+        var data = await SearchGamertagAsync(gamertag, ct);
+        if (data.TryGetProperty("content", out var content) &&
+            content.TryGetProperty("people", out var people) &&
+            people.ValueKind == JsonValueKind.Array &&
+            people.GetArrayLength() > 0 &&
+            people[0].TryGetProperty("xuid", out var x))
+            return x.GetString();
+        return null;
+    }
+
+    /// <summary>The games a player has played (each with titleId + name).</summary>
+    public async Task<JsonElement> GetPlayerTitlesAsync(string xuid, CancellationToken ct = default)
+    {
+        // OpenXBL's dedicated "games this player owns" endpoint.
+        using var resp = await _http.GetAsync($"player/titleHistory/{xuid}", ct);
         resp.EnsureSuccessStatusCode();
         return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
     }
