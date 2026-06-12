@@ -18,4 +18,14 @@ public static class AchievementTools
         var data = await client.SearchGamertagAsync(gamertag);
         return JsonSerializer.Serialize(data, Pretty);
     }
+
+    [McpServerTool]
+    [Description("List the games (titles) a player has played, with their title IDs and achievement progress. Use GetPlayerProfile first to get the player's XUID.")]
+    public static async Task<string> ListPlayedTitles(
+        OpenXblClient client,
+        [Description("The player's XUID (numeric Xbox user ID), e.g. from GetPlayerProfile")] string xuid)
+    {
+        var data = await client.GetPlayerTitlesAsync(xuid);
+        return JsonSerializer.Serialize(data, Pretty);
+    }
 }
