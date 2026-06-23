@@ -64,6 +64,37 @@ public static class AchievementTools
             ? "No played titles found for this player."
             : JsonSerializer.Serialize(games, Pretty);
     }
+    [McpServerTool]
+[Description("Get recent Xbox activity history for the account tied to the API key.")]
+public static async Task<string> GetActivityHistory(OpenXblClient client)
+{
+    var data = await client.GetActivityHistoryAsync();
+    return JsonSerializer.Serialize(data, Pretty);
+}
+
+[McpServerTool]
+[Description("Get the Xbox social activity feed for the account tied to the API key.")]
+public static async Task<string> GetActivityFeed(OpenXblClient client)
+{
+    var data = await client.GetActivityFeedAsync();
+    return JsonSerializer.Serialize(data, Pretty);
+}
+
+[McpServerTool]
+[Description("Get what a player is currently doing on Xbox (presence). Uses remembered player or an optional gamertag/XUID.")]
+public static async Task<string> GetPlayerPresence(
+    OpenXblClient client,
+    PlayerContext player,
+    [Description("Optional gamertag. Leave empty to use the remembered/default player.")] string? gamertag = null,
+    [Description("Optional XUID. Leave empty to use the remembered/default player.")] string? xuid = null)
+{
+    var resolved = await ResolveXuidAsync(client, player, xuid, gamertag);
+    if (resolved is null)
+        return "No player set. Call GetPlayerProfile first, or set XBL_DEFAULT_GAMERTAG in the config.";
+
+    var data = await client.GetPresenceAsync(resolved);
+    return JsonSerializer.Serialize(data, Pretty);
+}
 
     // ---- helpers ----
 

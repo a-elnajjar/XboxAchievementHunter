@@ -48,4 +48,26 @@ public sealed class OpenXblClient
         resp.EnsureSuccessStatusCode();
         return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
     }
+
+    /// <summary>Recent activity history for the API key owner.</summary>
+    public async Task<JsonElement> GetActivityHistoryAsync(CancellationToken ct = default)
+    {
+        using var resp = await _http.GetAsync("activity/history", ct);
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+    }
+    /// <summary>Social activity feed for the API key owner.</summary>
+    public async Task<JsonElement> GetActivityFeedAsync(CancellationToken ct = default)
+    {
+        using var resp = await _http.GetAsync("activity/feed", ct);
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+    }
+    /// <summary>Current presence for one or more players (comma-separated XUIDs).</summary>
+    public async Task<JsonElement> GetPresenceAsync(string xuid, CancellationToken ct = default)
+    {
+        using var resp = await _http.GetAsync($"{xuid}/presence", ct);
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: ct);
+    }
 }

@@ -3,7 +3,7 @@
       "XboxAchievementHunter": {
         "commandName": "Project",
         "environmentVariables": {
-          "XBL_API_KEY": "",
+          "XBL_API_KEY": "376c9bde-72f4-48f1-8f2d-7f61d8d1cd55",
           "XBL_DEFAULT_GAMERTAG": ""
         }
       }
