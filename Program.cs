@@ -11,6 +11,14 @@ builder.Logging.AddConsole(o =>
 });
 
 builder.Services.AddHttpClient<OpenXblClient>();
+builder.Services.AddHttpClient<OpenXblAuthClient>();
+
+// Holds the OpenXBL API key for this session (in memory only). Seeded from
+// XBL_API_KEY if set, then overwritten when the user signs in with their own account.
+builder.Services.AddSingleton(_ => new XblAuthSession
+{
+    ApiKey = Environment.GetEnvironmentVariable("XBL_API_KEY")
+});
 
 // Remembers the current player across tool calls so you don't pass the XUID every time.
 // Set XBL_DEFAULT_GAMERTAG in the config env block to default to your own tag.
